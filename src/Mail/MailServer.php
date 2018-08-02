@@ -67,40 +67,46 @@ class MailServer {
     	$this->mail->addAddress($receipt->getEmail(), $receipt->getName());
     }
 
-    private function setBody(DocumentInterface $document, $options = []){
-        $content = $this->getTemplate($document, $options);
+    private function setBody(DocumentInterface $document, $options = [], $templatePath = "", $templateName = ""){
+        $content = $this->getTemplate($document, $options, $templatePath, $templateName);
         $this->mail->Body = $content;
         $this->mail->Subject = str_replace('{}', $document->getCompany()->getRazonSocial(), MailServer::SUBJECT);
     }
 
     private function setAttachment($files){
-        foreach ($files as $file) {
-    	   $this->mail->AddStringAttachment($file->getContent(), $file->getName(), 'base64', $file->getType());
-        }
+      foreach ($files as $file) {
+  	   $this->mail->AddStringAttachment($file->getContent(), $file->getName(), 'base64', $file->getType());
+      }
     }
 
-    public function send(Notification $notification, $options = []){
+    public function send(Notification $notification, $options = [], $templatePath = "", $templateName = ""){
     	$response = array('success' => true, 'error' => false, 'code' => 0, 'message' => '');
-    	
-        $this->setBody($notification->getDocument(), $options);
-        $this->setAttachment($notification->getFiles());
 
-		if (!$this->mail->send()) {
-            $response['error'] = true;
-            $response['message'] = $this->mail->ErrorInfo;
-        } else {
-            $response['message'] = 'Correo enviado';
-        }
+      $this->setBody($notification->getDocument(), $options, $templatePath, $templateName);
+      $this->setAttachment($notification->getFiles());
 
-		return $response;
+			if (!$this->mail->send()) {
+        $response['error'] = true;
+        $response['message'] = $this->mail->ErrorInfo;
+      } else {
+        $response['message'] = 'Correo enviado';
+      }
+
+			return $response;
     }
 
-    private function getTemplate(DocumentInterface $document, $options = []){
-        $html = new HtmlReport(__DIR__ . '/Templates', [
-            //'cache' => __DIR__ . '/../cache',
-            'strict_variables' => true
-        ]);
-        $html->setTemplate('mail.html.twig');
-        return $html->render($document, $options);
+    private function getTemplate(DocumentInterface $document, $options = [], $templatePath = "", $templateName = ""){
+			if($templatePath == ""){
+				$templatePath = __DIR__ . '/Templates';
+			}
+      $html = new HtmlReport($templatePath, [
+        //'cache' => __DIR__ . '/../cache',
+        'strict_variables' => true
+      ]);
+			if($templateName == ""){
+				$templateName = 'mail.html.twig';
+			}
+      $html->setTemplate($templateName);
+      return $html->render($document, $options);
     }
 }

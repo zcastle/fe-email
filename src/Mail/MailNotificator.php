@@ -28,8 +28,8 @@ class MailNotificator implements NotificatorInterface {
      *
      * @return mixed
      */
-    public function notify(Notification $notification, $options = []){
-        return $this->mailServer->send($notification, $options);
+    public function notify(Notification $notification, $options = [], $templatePath = "", $templateName = ""){
+        return $this->mailServer->send($notification, $options, $templatePath, $templateName);
     }
 
 }
